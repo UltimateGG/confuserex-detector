@@ -30,7 +30,7 @@ rule SuppressIldasm {
 		$s1
 }
 
-rule ConfuserEx_General {
+global rule ConfuserEx_General {
 	meta:
 		description = "Detect unicode naming pattern used by ConfuserEx when any code protection is enabled. This is present even if the user chooses to use a different renamer"
 
@@ -52,7 +52,7 @@ private rule VirtualProtect {
 
 rule ConfuserEx_AntiTamper_Normal {
 	strings:
-		$s1 = "AllocHGlobal"
+		$s1 = "GetFunctionPointerForDelegate"
 
 	condition:
 		VirtualProtect
@@ -61,12 +61,12 @@ rule ConfuserEx_AntiTamper_Normal {
 		and pe.sections[pe.number_of_sections - 1].characteristics == 0x60000020
 		and pe.sections[pe.number_of_sections - 1].name == ""
 
-		// TODO detect that version that does other order
+		// TODO detect mkaring version that does insert before .reloc
 }
 
 rule ConfuserEx_AntiTamper_JIT {
 	strings:
-		$s1 = "AllocHGlobal"
+		$s1 = "GetFunctionPointerForDelegate"
 
 	condition:
 		VirtualProtect
@@ -80,7 +80,7 @@ rule ConfuserEx_AntiTamper_JIT {
 		)
 }
 
-rule ConfuserEx_Constants_Protection {
+rule ConfuserEx_Constants {
 	meta:
 		description = "ConfuserEx constants protection which may include string protection, primitives, etc."
 
@@ -89,21 +89,19 @@ rule ConfuserEx_Constants_Protection {
 		$s2 = "GetElementType"
 		$s3 = "BlockCopy"
 		$s4 = "GetString"
-		// Bit shift patterns in the decoder
-		$shift = { 11 08 11 06 25 17 58 13 06 11 0B 1E 64 D2 9C }
+		$shift = { 11 08 11 06 }
 
 	condition:
 		$s1 and $s2 and $s3 and $s4 and $shift 
 }
 
+
 rule ConfuserEx_ControlFlow_Switch {
 	strings:
-		$switch = { 20 [4] 61 25 0A 1A 5E 45 }
-		$h1 = { 06 20 [4] 5A 20 [4] 61 }
+		$switch = { 20 [4] 61 25 0A ?? 5E 45 }
 
 	condition:
 		$switch
-		and $h1
 }
 
 rule ConfuserEx_AntiDump {
@@ -111,13 +109,16 @@ rule ConfuserEx_AntiDump {
 		$h1 = { 08 1F 3C D3 58 0D 08 09 4B 58 0D }
 		$h2 = { 61 25 13 2C } // w/ ref proxy
 		$h3 = { 11 1A 20 [4] 5A 20 [4] 61 }
+		$h4 = { 11 06 1A D3 18 5A 58 20 [4] 53 }
 		$s1 = "GetTypeFromHandle"
 		$s2 = "op_Explicit"
 		$s3 = "GetHINSTANCE"
 
 	condition:
 		VirtualProtect
-		and ($h1 or $h2 or $h3)
+		and (
+			$h1 or $h2 or $h3 or $h4
+		)
 		and $s1
 		and $s2
 		and $s3
@@ -183,13 +184,13 @@ rule ConfuserEx_RefProxy_Strong {
 		$s1 = "GetFieldFromHandle"
 		$s2 = "ResolveSignature"
 		$s3 = "GetOptionalCustomModifiers"
-		$h1 = { 06 6F 1C 00 00 0A 06 6F 1D 00 00 0A 6F 1E 00 00 0A 0B }
+		$s4 = "SetLocalSignature"
 
 	condition:
 		$s1
 		and $s2
 		and $s3
-		and $h1
+		and $s4
 }
 
 rule ConfuserEx_Resources_Protection {
