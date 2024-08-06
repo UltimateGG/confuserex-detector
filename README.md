@@ -10,8 +10,8 @@ This can help in detecting malware, and just reverse engineering so you can easi
 - General <small>(ConfuserEx_General)</small>
   - Detects ConfuserEx even when watermarks are removed using a renaming pattern it uses internally
 - Anti Ildasm <small>(SuppressIldasm)</small>
-- Anti Tamper <small>(ConfuserEx_AntiTamper_Normal, ConfuserEx_AntiTamper_JIT)</small>
-  - Distinct rules for normal or JIT mode
+- Anti Tamper <small>(ConfuserEx_AntiTamper_Normal, ConfuserEx_AntiTamper_JIT, ConfuserEx_2_AntiTamper_Anti, ConfuserEx_2_AntiTamper_Normal)</small>
+  - Distinct rules for normal (1 and 2), JIT mode, or Anti mode (ConfuserEx 2)
 - Constants encryption <small>(ConfuserEx_Constants)</small>
 - Control Flow <small>(ConfuserEx_ControlFlow_Switch)</small>
   - Switch mode only

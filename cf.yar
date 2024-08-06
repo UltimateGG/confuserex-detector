@@ -13,10 +13,11 @@ rule ConfuserEx_Watermark {
 
 	strings:
 		$s1 = "ConfuserEx v"
-		$s2 = "ConfusedByAttribute"
+		$s2 = "Confuser.Core"
+		$s3 = "ConfusedByAttribute"
 	
 	condition:
-		$s1 or $s2
+		$s1 or $s2 or $s3
 }
 
 rule SuppressIldasm {
@@ -50,6 +51,25 @@ private rule VirtualProtect {
 		$s1 and $s2
 }
 
+rule ConfuserEx_2_AntiTamper_Anti {
+	meta:
+		description = "ConfuserEx by Mkaring version"
+
+	strings:
+		$s1 = "GetFunctionPointerForDelegate"
+		$s2 = "CheckRemoteDebuggerPresent"
+		$s3 = "GetCurrentProcess"
+
+	condition:
+		VirtualProtect
+		and not $s1
+		and $s2 and $s3
+		and pe.sections[0].characteristics == 0xE0000040
+		and pe.sections[pe.number_of_sections - 2].characteristics == 0x60000020
+		and pe.sections[pe.number_of_sections - 2].name == ""
+		and pe.sections[pe.number_of_sections - 1].name == ".reloc"
+}
+
 rule ConfuserEx_AntiTamper_Normal {
 	strings:
 		$s1 = "GetFunctionPointerForDelegate"
@@ -57,11 +77,28 @@ rule ConfuserEx_AntiTamper_Normal {
 	condition:
 		VirtualProtect
 		and not $s1
+		and not ConfuserEx_2_AntiTamper_Anti
 		and pe.sections[0].characteristics == 0xE0000040
 		and pe.sections[pe.number_of_sections - 1].characteristics == 0x60000020
 		and pe.sections[pe.number_of_sections - 1].name == ""
+}
 
-		// TODO detect mkaring version that does insert before .reloc
+rule ConfuserEx_2_AntiTamper_Normal {
+	meta:
+		description = "ConfuserEx by Mkaring version"
+
+	strings:
+		$s1 = "GetFunctionPointerForDelegate"
+
+	condition:
+		VirtualProtect
+		and not $s1
+		and not ConfuserEx_AntiTamper_Normal
+		and not ConfuserEx_2_AntiTamper_Anti
+		and pe.sections[0].characteristics == 0xE0000040
+		and pe.sections[pe.number_of_sections - 2].characteristics == 0x60000020
+		and pe.sections[pe.number_of_sections - 2].name == ""
+		and pe.sections[pe.number_of_sections - 1].name == ".reloc"
 }
 
 rule ConfuserEx_AntiTamper_JIT {
