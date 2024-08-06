@@ -95,6 +95,18 @@ rule ConfuserEx_Constants {
 		$s1 and $s2 and $s3 and $s4 and $shift 
 }
 
+rule ConfuserEx_V2_Mkaring {
+	meta:
+		description = "ConfuserEx Mkaring version (1.1.0+)"
+
+	strings:
+		$s1 = "GetExecutingAssembly"
+		$s2 = "GetCallingAssembly"
+
+	condition:
+		ConfuserEx_Constants and $s1 and $s2
+}
+
 
 rule ConfuserEx_ControlFlow_Switch {
 	strings:
